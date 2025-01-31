@@ -1,0 +1,694 @@
+<html><head><base href="https://www.example.org"/>
+<title>Pokemon Slot Machine Game</title>
+<style>
+h1 {
+    text-align: center;
+    color: #ff4d4d;
+    font-family: Arial, sans-serif;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    margin: 20px 0;
+}
+
+.slot-machine {
+    background: linear-gradient(45deg, #333, #666);
+    border-radius: 15px;
+    padding: 20px;
+    width: 400px;
+    margin: 20px auto; /* Changed from 50px to 20px */
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.reels {
+    display: flex;
+    justify-content: space-between;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.reel {
+    width: 100px;
+    height: 100px;
+    border: 3px solid gold;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f8f8;
+    overflow: hidden;
+    position: relative;
+    perspective: 1000px; /* Add this for 3D effect */
+}
+
+.reel img {
+    position: absolute;
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: contain;
+    backface-visibility: visible; /* Show both sides of the spinning image */
+}
+
+.controls {
+    text-align: center;
+}
+
+#spinButton {
+    background: linear-gradient(45deg, #ff4d4d, #ff0000);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+#spinButton:hover {
+    transform: scale(1.05);
+}
+
+#spinButton:disabled {
+    background: #999;
+    cursor: not-allowed;
+}
+
+.score {
+    text-align: center;
+    color: white;
+    font-size: 24px;
+    margin-top: 20px;
+}
+
+.quiz-container {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin: 10px auto; /* Changed from 20px to 10px */
+    width: 400px;
+}
+
+.quiz-title {
+    text-align: center;
+    color: #ff4d4d;
+    font-family: Arial, sans-serif;
+    font-size: 1.2em;
+    margin-bottom: 15px;
+}
+
+.quiz-container button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f8f8f8;
+    cursor: pointer;
+}
+
+.quiz-container button:hover {
+    background: #e8e8e8;
+}
+
+@keyframes spin {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
+}
+
+.spinning {
+    animation: spin 0.5s linear infinite;
+    transform-style: preserve-3d;
+}
+
+.footer {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    margin: 20px 0;
+    padding: 10px;
+}
+
+.message {
+    background: #fff3cd;
+    color: #856404;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 10px auto;
+    width: 400px;
+    text-align: center;
+    display: none;
+    font-family: Arial, sans-serif;
+    border: 1px solid #ffeeba;
+}
+
+.summary-modal, .message-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    z-index: 1000;
+    max-width: 400px;
+    width: 90%;
+}
+
+.stats {
+    text-align: center;
+    margin: 20px 0;
+    color: #666;
+    font-family: Arial, sans-serif;
+}
+
+.continue-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: block;
+    margin: 10px auto;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+}
+</style>
+</head>
+<body>
+<h1>English and Pokemon Pokies</h1>
+<div class="stats">
+    <span>Time: <span id="timer">00:00</span></span> |
+    <span>Spins: <span id="spinCount">0</span></span> |
+    <span>Correct Answers: <span id="correctAnswers">0</span></span>
+</div>
+
+<div id="lowCreditsMessage" class="message"></div>
+
+<div class="slot-machine">
+    <div class="reels">
+        <div class="reel" id="reel1"><img src="https://assets.pokemon.com/assets/cms2/img/pokedex/full/025.png" alt="Pikachu"></div>
+        <div class="reel" id="reel2"><img src="https://assets.pokemon.com/assets/cms2/img/pokedex/full/004.png" alt="Charmander"></div>
+        <div class="reel" id="reel3"><img src="https://assets.pokemon.com/assets/cms2/img/pokedex/full/007.png" alt="Squirtle"></div>
+    </div>
+    <div class="controls">
+        <button id="spinButton">SPIN!</button>
+    </div>
+    <div class="score">Credits: <span id="credits">0</span></div>
+</div>
+
+<div class="quiz-container">
+    <h2 class="quiz-title">Answer Questions to Earn Credits</h2>
+    <h3 id="question">Loading question...</h3>
+    <div id="choices"></div>
+</div>
+
+<div class="footer">
+    Author: Aaron Shi. Released in 2024. Last update on November 28, 2024.
+</div>
+
+<div class="modal-overlay" id="modalOverlay"></div>
+<div class="summary-modal" id="summaryModal">
+    <h2>Congratulations!</h2>
+    <p>You've hit the jackpot with three matching Pokémon!</p>
+    <div id="summaryStats"></div>
+    <button class="continue-btn" id="continueBtn">Continue Playing</button>
+</div>
+
+<div class="message-modal" id="messageModal">
+    <h2>Not Enough Credits</h2>
+    <p>You don't have enough credits to spin. Answer questions correctly to earn more credits!</p>
+    <button class="continue-btn" id="messageCloseBtn">Got it!</button>
+</div>
+
+<script>
+const symbols = [
+    { img: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/025.png', id: 'pikachu' },
+    { img: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/004.png', id: 'charmander' },
+    { img: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/007.png', id: 'squirtle' },
+    { img: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/001.png', id: 'bulbasaur' },
+    { img: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/120.png', id: 'staryu' },
+    { img: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/035.png', id: 'clefairy' }
+];
+
+const questions = [
+    {
+      "question": "If you _____ the report by tomorrow, we can discuss it at the meeting.",
+      "choices": ["complete", "completed", "had completed", "completing"],
+      "correct": 0
+    },
+    {
+      "question": "If she _____ more carefully, she wouldn’t have made that mistake.",
+      "choices": ["had planned", "plans", "will plan", "planning"],
+      "correct": 0
+    },
+    {
+      "question": "The company would save more money if it _____ energy-efficient equipment.",
+      "choices": ["used", "uses", "has used", "will use"],
+      "correct": 0
+    },
+    {
+      "question": "If they had followed the instructions, they _____ the problem sooner.",
+      "choices": ["would have solved", "will solve", "solve", "solving"],
+      "correct": 0
+    },
+    {
+      "question": "Unless the weather improves, we _____ to reschedule the outdoor event.",
+      "choices": ["will have", "had", "would have", "has"],
+      "correct": 0
+    },
+    {
+      "question": "If the company _____ the contract, it would have secured a major client.",
+      "choices": ["had signed", "signs", "would sign", "signed"],
+      "correct": 0
+    },
+    {
+      "question": "You will not receive the discount unless you _____ the coupon code at checkout.",
+      "choices": ["enter", "entered", "had entered", "enters"],
+      "correct": 0
+    },
+    {
+      "question": "If she _____ more time, she could have finished the project on time.",
+      "choices": ["had", "has", "have", "having"],
+      "correct": 0
+    },
+    {
+      "question": "Had they prepared more thoroughly, they _____ better results in the presentation.",
+      "choices": ["would achieve", "would have achieved", "achieve", "had achieved"],
+      "correct": 1
+    },
+    {
+      "question": "If the weather improves tomorrow, we _____ the outdoor event as planned.",
+      "choices": ["will hold", "would hold", "held", "would have held"],
+      "correct": 0
+    },
+    {
+      "question": "The report _____ by the end of the week if we want to meet the deadline.",
+      "choices": ["must be finished", "must finish", "must finishing", "must have finished"],
+      "correct": 0
+    },
+    {
+      "question": "If the meeting _____ postponed, we will have to reschedule all our appointments.",
+      "choices": ["were", "was", "is", "being"],
+      "correct": 2
+    },
+    {
+      "question": "The company has decided to expand its operations, _____ it has hired additional staff.",
+      "choices": ["therefore", "although", "however", "unless"],
+      "correct": 0
+    },
+    {
+      "question": "No sooner _____ the announcement than the room filled with applause.",
+      "choices": ["did he make", "he made", "has he made", "he has made"],
+      "correct": 0
+    },
+    {
+      "question": "The CEO requested that all employees _____ their suggestions by the end of the month.",
+      "choices": ["submit", "submits", "submitted", "submitting"],
+      "correct": 0
+    },
+    {
+      "question": "Despite _____ for the job, he was not selected for the final interview.",
+      "choices": ["applying", "to apply", "applies", "applied"],
+      "correct": 0
+    },
+    {
+      "question": "The results of the survey will be discussed once they _____ by the marketing team.",
+      "choices": ["are analyzed", "have analyzed", "analyzing", "analyze"],
+      "correct": 0
+    },
+    {
+      "question": "Had I known about the delay, I _____ the meeting for another day.",
+      "choices": ["would have rescheduled", "reschedule", "will reschedule", "would rescheduling"],
+      "correct": 0
+    },
+    {
+      "question": "Neither the manager nor the employees _____ satisfied with the current policy.",
+      "choices": ["is", "are", "was", "were"],
+      "correct": 1
+    },
+    {
+      "question": "By the time we arrived at the station, the train _____ already left.",
+      "choices": ["had", "has", "is", "was"],
+      "correct": 0
+    },
+    {
+      "question": "The manager praised the team for their _____ efforts in completing the project ahead of schedule.",
+      "choices": ["intelligent", "diligent", "emergent", "indulgent"],
+      "correct": 1
+    },
+    {
+      "question": "The company issued an official _____ regarding the recent changes in its leadership team.",
+      "choices": ["announcement", "development", "replacement", "enhancement"],
+      "correct": 0
+    },
+    {
+      "question": "To avoid any delays, please _____ your travel arrangements well in advance.",
+      "choices": ["verify", "justify", "finalize", "organize"],
+      "correct": 2
+    },
+    {
+      "question": "The marketing department launched a new campaign to _____ brand awareness among younger consumers.",
+      "choices": ["elevate", "enhance", "increase", "eliminate"],
+      "correct": 2
+    },
+    {
+      "question": "The contract was reviewed carefully to ensure that all terms were _____ to both parties.",
+      "choices": ["agreeable", "negotiable", "comparable", "reasonable"],
+      "correct": 0
+    },
+    {
+      "question": "After the recent upgrades, the software now operates more _____ than before.",
+      "choices": ["quick", "efficiency", "efficiently", "swiftly"],
+      "correct": 2
+    },
+    {
+      "question": "The company’s decision to _____ the production of its popular model was welcomed by investors.",
+      "choices": ["accelerate", "facilitate", "demonstrate", "initiate"],
+      "correct": 0
+    },
+    {
+      "question": "The results of the survey were _____ and provided valuable insights into customer preferences.",
+      "choices": ["confusing", "comprehensive", "compromising", "cooperative"],
+      "correct": 1
+    },
+    {
+      "question": "All employees are expected to _____ the company's policies on data security.",
+      "choices": ["adhere to", "approve of", "advocate for", "adapt to"],
+      "correct": 0
+    },
+    {
+      "question": "Due to the storm, the airline had to _____ all flights until further notice.",
+      "choices": ["proceed", "resume", "cancel", "postpone"],
+      "correct": 3
+    },
+    {
+      "question": "The company's financial _____ showed a significant increase in revenue over the past quarter.",
+      "choices": ["report", "support", "import", "resort"],
+      "correct": 0
+    },
+    {
+      "question": "Employees are encouraged to _____ new ideas during the brainstorming session.",
+      "choices": ["suggest", "protest", "digest", "arrest"],
+      "correct": 0
+    },
+    {
+      "question": "The new product has been designed to _____ the needs of a wide range of customers.",
+      "choices": ["meet", "beat", "heat", "seat"],
+      "correct": 0
+    },
+    {
+      "question": "The construction of the new bridge will _____ both time and money for local commuters.",
+      "choices": ["save", "wave", "pave", "brave"],
+      "correct": 0
+    },
+    {
+      "question": "The hotel offers a complimentary breakfast to all guests as part of its _____ services.",
+      "choices": ["hospitality", "ability", "facility", "reality"],
+      "correct": 0
+    },
+    {
+      "question": "To ensure accuracy, please _____ all the information before submitting the form.",
+      "choices": ["verify", "justify", "amplify", "clarify"],
+      "correct": 0
+    },
+    {
+      "question": "The factory was closed for several weeks due to a _____ of raw materials.",
+      "choices": ["shortage", "advantage", "coverage", "package"],
+      "correct": 0
+    },
+    {
+      "question": "The new employee quickly adapted to the company's _____ and procedures.",
+      "choices": ["policies", "pollutions", "publications", "predictions"],
+      "correct": 0
+    },
+    {
+      "question": "The company's decision to reduce staff was made to _____ financial losses.",
+      "choices": ["minimize", "maximize", "finalize", "summarize"],
+      "correct": 0
+    },
+    {
+      "question": "The CEO delivered an inspiring speech that was well-received by the entire _____ .",
+      "choices": ["audience", "appliance", "alliance", "assistance"],
+      "correct": 0
+    },
+    {
+      "question": "The manager provided a detailed _____ on how the new system would be implemented.",
+      "choices": ["explanation", "expedition", "explosion", "expectation"],
+      "correct": 0
+    },
+    {
+      "question": "Due to the economic downturn, the company experienced a significant _____ in sales.",
+      "choices": ["decline", "incline", "recline", "confine"],
+      "correct": 0
+    },
+    {
+      "question": "The software update will _____ improve the performance of the application.",
+      "choices": ["significantly", "silently", "temporarily", "casually"],
+      "correct": 0
+    },
+    {
+      "question": "The committee agreed that the proposal was both innovative and _____ for the current market.",
+      "choices": ["suitable", "noticeable", "perishable", "admirable"],
+      "correct": 0
+    },
+    {
+      "question": "The company has decided to _____ its headquarters to a more central location.",
+      "choices": ["relocate", "renovate", "replicate", "redecorate"],
+      "correct": 0
+    },
+    {
+      "question": "The new policy is designed to _____ employee productivity while reducing operational costs.",
+      "choices": ["enhance", "enforce", "endure", "engage"],
+      "correct": 0
+    },
+    {
+      "question": "The technician explained that the problem was caused by a _____ in the wiring system.",
+      "choices": ["malfunction", "construction", "disruption", "instruction"],
+      "correct": 0
+    },
+    {
+      "question": "It is important to _____ all necessary documents before submitting the application.",
+      "choices": ["compile", "compress", "confide", "compensate"],
+      "correct": 0
+    },
+    {
+      "question": "The project was completed ahead of schedule, thanks to the team's _____ efforts.",
+      "choices": ["diligent", "delicate", "deceptive", "dominant"],
+      "correct": 0
+    },
+    {
+      "question": "The company aims to _____ its market share by launching a new advertising campaign.",
+      "choices": ["expand", "extend", "expend", "expose"],
+      "correct": 0
+    },
+    {
+      "question": "The marketing team is scheduled to present their new advertising strategy _____ next week.",
+      "choices": ["sometime", "some time", "sometimes", "somewhat"],
+      "correct": 0
+    },
+    {
+      "question": "The manager requested that all employees _____ their timesheets by Friday afternoon.",
+      "choices": ["submit", "submits", "submitted", "submitting"],
+      "correct": 0
+    },
+    {
+      "question": "Despite the heavy rain, the construction project remained on _____ and was completed on time.",
+      "choices": ["schedule", "scheduled", "scheduling", "schedules"],
+      "correct": 0
+    },
+    {
+      "question": "The new software update offers several features that are both innovative and highly _____ .",
+      "choices": ["function", "functional", "functionally", "functioning"],
+      "correct": 1
+    },
+    {
+      "question": "In order to enhance productivity, the company implemented a more _____ workflow system.",
+      "choices": ["efficiency", "efficient", "efficiently", "efficiencies"],
+      "correct": 1
+    },
+    {
+      "question": "Employees are required to wear identification badges _____ all times while in the office.",
+      "choices": ["in", "at", "on", "by"],
+      "correct": 1
+    },
+    {
+      "question": "The finance department is currently reviewing the budget to ensure it _____ the company's long-term goals.",
+      "choices": ["meet", "meets", "meeting", "met"],
+      "correct": 1
+    },
+    {
+      "question": "The CEO’s speech was well-received because it addressed the concerns of the employees _____ and directly.",
+      "choices": ["clear", "clearly", "clarity", "clearest"],
+      "correct": 1
+    },
+    {
+      "question": "Due to unforeseen circumstances, the meeting has been _____ until further notice.",
+      "choices": ["postponing", "postpones", "postpone", "postponed"],
+      "correct": 3
+    },
+    {
+      "question": "The customer service team has worked diligently to resolve the issue as quickly as _____ .",
+      "choices": ["possible", "possibly", "possibility", "possibilities"],
+      "correct": 0
+    }
+];
+
+let credits = 0;
+let spinning = false;
+let startTime = new Date();
+let spinCount = 0;
+let correctAnswersCount = 0;
+
+function showMessage(message) {
+    document.getElementById('modalOverlay').style.display = 'block';
+    document.getElementById('messageModal').style.display = 'block';
+}
+
+document.getElementById('messageCloseBtn').addEventListener('click', () => {
+    document.getElementById('modalOverlay').style.display = 'none';
+    document.getElementById('messageModal').style.display = 'none';
+});
+
+function updateTimer() {
+    const now = new Date();
+    const diff = Math.floor((now - startTime) / 1000);
+    const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+    const seconds = (diff % 60).toString().padStart(2, '0');
+    document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+}
+
+setInterval(updateTimer, 1000);
+
+const updateCredits = (amount) => {
+    credits += amount;
+    document.getElementById('credits').textContent = credits;
+};
+
+const showSummary = () => {
+    const now = new Date();
+    const timePlayed = Math.floor((now - startTime) / 1000);
+    const minutes = Math.floor(timePlayed / 60);
+    const seconds = timePlayed % 60;
+    
+    const summaryStats = document.getElementById('summaryStats');
+    summaryStats.innerHTML = `
+        <p>Time Played: ${minutes}m ${seconds}s</p>
+        <p>Total Spins: ${spinCount}</p>
+        <p>Correct Answers: ${correctAnswersCount}</p>
+        <p>Current Date: ${now.toLocaleDateString()}</p>
+        <p>Credits Remaining: ${credits}</p>
+    `;
+    
+    document.getElementById('modalOverlay').style.display = 'block';
+    document.getElementById('summaryModal').style.display = 'block';
+};
+
+document.getElementById('continueBtn').addEventListener('click', () => {
+    document.getElementById('modalOverlay').style.display = 'none';
+    document.getElementById('summaryModal').style.display = 'none';
+});
+
+const spin = () => {
+    if (spinning) return;
+    
+    if (credits < 20) {
+        document.getElementById('messageModal').querySelector('h2').textContent = 'Not Enough Credits';
+        document.getElementById('messageModal').querySelector('p').textContent = "You don't have enough credits for a spin. Earn more credits by answering questions.";
+        showMessage();
+        return;
+    }
+    
+    spinning = true;
+    updateCredits(-20);
+    spinCount++;
+    document.getElementById('spinCount').textContent = spinCount;
+    
+    const spinButton = document.getElementById('spinButton');
+    spinButton.disabled = true;
+    
+    const reels = document.querySelectorAll('.reel');
+    reels.forEach(reel => reel.classList.add('spinning'));
+    
+    const results = [];
+    // Different stop times for each reel
+    const stopTimes = [1000, 1500, 2000];  // 1s, 1.5s, 2s
+    
+    stopTimes.forEach((time, index) => {
+        setTimeout(() => {
+            const reel = document.getElementById(`reel${index + 1}`);
+            const result = symbols[Math.floor(Math.random() * symbols.length)];
+            results.push(result.id);
+            reel.classList.remove('spinning');
+            reel.innerHTML = `<img src="${result.img}" alt="${result.id}">`;
+            
+            if (index === 2) {
+                checkWin(results);
+                spinning = false;
+                spinButton.disabled = false;
+            }
+        }, time);
+    });
+};
+
+const checkWin = (results) => {
+    if (results[0] === results[1] && results[1] === results[2]) {
+        updateCredits(50);
+        showSummary();
+    } else if (results[0] === results[1] || results[1] === results[2] || results[0] === results[2]) {
+        updateCredits(5);
+        document.getElementById('messageModal').querySelector('h2').textContent = 'Small Win!';
+        document.getElementById('messageModal').querySelector('p').textContent = 'You won 5 credits!';
+        showMessage();
+    }
+};
+
+const displayQuestion = () => {
+    const questionIndex = Math.floor(Math.random() * questions.length);
+    const currentQuestion = questions[questionIndex];
+    
+    document.getElementById('question').textContent = currentQuestion.question;
+    const choicesContainer = document.getElementById('choices');
+    choicesContainer.innerHTML = '';
+    
+    currentQuestion.choices.forEach((choice, index) => {
+        const button = document.createElement('button');
+        button.textContent = choice;
+        button.onclick = () => checkAnswer(index, questionIndex);
+        choicesContainer.appendChild(button);
+    });
+};
+
+const checkAnswer = (choiceIndex, questionIndex) => {
+    if (choiceIndex === questions[questionIndex].correct) {
+        updateCredits(15);
+        document.getElementById('messageModal').querySelector('h2').textContent = 'Correct Answer!';
+        document.getElementById('messageModal').querySelector('p').textContent = 'You earned 15 credits!';
+        showMessage();
+        correctAnswersCount++;
+        document.getElementById('correctAnswers').textContent = correctAnswersCount;
+    } else {
+        document.getElementById('messageModal').querySelector('h2').textContent = 'Wrong Answer';
+        document.getElementById('messageModal').querySelector('p').textContent = 'Try again!';
+        showMessage();
+    }
+    displayQuestion();
+};
+
+document.getElementById('spinButton').addEventListener('click', spin);
+displayQuestion();
+</script>
+</body></html>
