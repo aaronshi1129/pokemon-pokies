@@ -217,7 +217,7 @@ h1 {
 </div>
 
 <div class="footer">
-    Author: Aaron Shi. Released in 2024. Last update on November 28, 2024.
+    Author: Aaron Shi. Released in 2024. Last update on February 9, 2025.
 </div>
 
 <div class="modal-overlay" id="modalOverlay"></div>
@@ -660,20 +660,30 @@ const displayQuestion = () => {
     const questionIndex = Math.floor(Math.random() * questions.length);
     const currentQuestion = questions[questionIndex];
     
+    // 複製選項並隨機排序
+    const shuffledChoices = [...currentQuestion.choices];
+    for (let i = shuffledChoices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledChoices[i], shuffledChoices[j]] = [shuffledChoices[j], shuffledChoices[i]];
+    }
+    
+    // 找到正確答案的新索引
+    const correctAnswerIndex = shuffledChoices.indexOf(currentQuestion.choices[currentQuestion.correct]);
+    
     document.getElementById('question').textContent = currentQuestion.question;
     const choicesContainer = document.getElementById('choices');
     choicesContainer.innerHTML = '';
     
-    currentQuestion.choices.forEach((choice, index) => {
+    shuffledChoices.forEach((choice, index) => {
         const button = document.createElement('button');
         button.textContent = choice;
-        button.onclick = () => checkAnswer(index, questionIndex);
+        button.onclick = () => checkAnswer(index, correctAnswerIndex);
         choicesContainer.appendChild(button);
     });
 };
 
-const checkAnswer = (choiceIndex, questionIndex) => {
-    if (choiceIndex === questions[questionIndex].correct) {
+const checkAnswer = (choiceIndex, correctAnswerIndex) => {
+    if (choiceIndex === correctAnswerIndex) {
         updateCredits(15);
         document.getElementById('messageModal').querySelector('h2').textContent = 'Correct Answer!';
         document.getElementById('messageModal').querySelector('p').textContent = 'You earned 15 credits!';
@@ -687,7 +697,6 @@ const checkAnswer = (choiceIndex, questionIndex) => {
     }
     displayQuestion();
 };
-
 document.getElementById('spinButton').addEventListener('click', spin);
 displayQuestion();
 </script>
